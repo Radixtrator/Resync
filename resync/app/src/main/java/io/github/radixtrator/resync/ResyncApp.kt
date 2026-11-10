@@ -21,6 +21,9 @@ class ResyncApp : Application(), SingletonImageLoader.Factory {
 
     override fun onCreate() {
         super.onCreate()
+        // The crash report screen's process shows a saved report and nothing else.
+        if (CrashReporter.isCrashProcess(this)) return
+        CrashReporter.install(this)
         container = AppContainer(this)
         // WorkManager opens its database the first time it's used, so the schedules are checked off the main
         // thread, where they'd only hold up the first frame.

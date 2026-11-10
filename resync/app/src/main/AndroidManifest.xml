@@ -37,6 +37,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Shows a crash's stack trace to copy or share; its own process, so the app's crash can't take it down. -->
+        <activity
+            android:name=".CrashActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:process=":crash" />
         <receiver
             android:name=".watch.WatchWorker$StopWatchingReceiver"
             android:exported="false" />
