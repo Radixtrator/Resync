@@ -50,6 +50,14 @@ fun gifBody(html: String, gifs: List<CommentGif>): GifBody {
     return GifBody(EMPTY_PARAGRAPH.replace(cleaned, ""), previews)
 }
 
+private val gifBodies = android.util.LruCache<Pair<String, List<CommentGif>>, GifBody>(600)
+
+/** [gifBody], kept for bodies seen recently: rows scrolling back in, and ones a comment page prepared ahead. */
+fun cachedGifBody(html: String, gifs: List<CommentGif>): GifBody {
+    val key = html to gifs
+    return gifBodies[key] ?: gifBody(html, gifs).also { gifBodies.put(key, it) }
+}
+
 /** The animated image a link points at, if it's a GIF: direct .gif links, Giphy pages and imgur .gifv. */
 fun gifUrl(link: String): String? {
     if (!link.startsWith("http")) return null

@@ -17,6 +17,7 @@ import androidx.core.net.toUri
 import androidx.navigation3.runtime.NavKey
 import io.github.radixtrator.resync.AppContainer
 import io.github.radixtrator.resync.data.Post
+import io.github.radixtrator.resync.data.PostCache
 import io.github.radixtrator.resync.data.PostMedia
 import io.github.radixtrator.resync.data.RedditApi
 import io.github.radixtrator.resync.data.Settings
@@ -118,6 +119,15 @@ class Navigator(
         }
     }
 
+    /**
+     * Opens [post]'s comment page. The post as shown here (with any vote or save just made) is remembered, so
+     * the page can draw it straight away while the comments load.
+     */
+    fun openPost(post: Post) {
+        PostCache.put(post)
+        push(PostRoute(post.id))
+    }
+
     /** What tapping a post's media does: viewer for images/galleries, player for video, else the link. */
     fun openMedia(post: Post) {
         when (val m = post.media) {
@@ -125,7 +135,7 @@ class Navigator(
             is PostMedia.Gallery -> push(ImageRoute(m.images.map { it.url }, postId = post.id))
             is PostMedia.Video -> push(VideoRoute(m.url, loop = m.loop, postId = post.id, fallback = m.fallback))
             is PostMedia.Link -> openUri(m.url)
-            PostMedia.None -> push(PostRoute(post.id))
+            PostMedia.None -> openPost(post)
         }
     }
 }

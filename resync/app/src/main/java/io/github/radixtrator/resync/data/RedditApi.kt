@@ -47,7 +47,7 @@ class RedditApi(private val client: RedditClient) {
             "$base/${sort.path}",
             mapOf("after" to after, "limit" to limit.toString(), "t" to sort.time?.param),
         )
-        return parsed { Parser.postListing(json) }
+        return parsed { Parser.postListing(json) }.also { PostCache.putAll(it.items) }
     }
 
     /** The newest comments in [subreddit] (null = the front page's communities), for Sync's "Comments" sort. */
@@ -244,7 +244,7 @@ class RedditApi(private val client: RedditClient) {
                 "limit" to "25",
             ),
         )
-        return parsed { Parser.postListing(json) }
+        return parsed { Parser.postListing(json) }.also { PostCache.putAll(it.items) }
     }
 
     suspend fun searchSubreddits(query: String, after: String?): Listing<Subreddit> =

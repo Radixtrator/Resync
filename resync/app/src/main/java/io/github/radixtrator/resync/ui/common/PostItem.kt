@@ -59,7 +59,6 @@ import io.github.radixtrator.resync.ui.navigation.LocalAccount
 import io.github.radixtrator.resync.ui.navigation.LocalContainer
 import io.github.radixtrator.resync.ui.navigation.LocalNavigator
 import io.github.radixtrator.resync.ui.navigation.LocalSettings
-import io.github.radixtrator.resync.ui.navigation.PostRoute
 import io.github.radixtrator.resync.ui.navigation.UserRoute
 
 /** Things a list can do to a post; implemented by [ListingViewModel]. */
@@ -102,7 +101,7 @@ fun PostListItem(
     var sheetOpen by remember { mutableStateOf(false) }
     val actions = remember(post, callbacks) {
         PostActions(
-            onOpen = { nav.push(PostRoute(post.id)) },
+            onOpen = { nav.openPost(post) },
             onMedia = { nav.openMedia(post) },
             onMore = { sheetOpen = true },
             onVote = { callbacks.onVote(post, it) },

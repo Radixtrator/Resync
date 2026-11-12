@@ -183,8 +183,42 @@ data class RedditText(val text: AnnotatedString, val links: List<String>)
  */
 @Composable
 fun rememberRedditText(html: String, footnotes: Boolean = true): RedditText {
-    val text = rememberRedditHtml(html)
-    return remember(text, footnotes) { if (footnotes) footnoteLinks(text) else RedditText(text, emptyList()) }
+    // A spoiler's reveal is state of this row, so it can't be shared through the cache.
+    if (SPOILER_CLASS in html) {
+        val text = rememberRedditHtml(html)
+        return remember(text, footnotes) { if (footnotes) footnoteLinks(text) else RedditText(text, emptyList()) }
+    }
+    val linkColor = MaterialTheme.colorScheme.primary
+    return remember(html, linkColor, footnotes) { redditText(html, linkColor, footnotes) }
+}
+
+private const val SPOILER_CLASS = "md-spoiler-text"
+
+private data class TextKey(val html: String, val linkColor: Color, val footnotes: Boolean)
+
+/**
+ * Finished comment and post bodies. Building one (fromHtml, footnotes) is the costly part of a row, so comment
+ * pages build the first screenful off the main thread with [prepareRedditText] before showing it, and rows that
+ * scroll back in reuse what was built.
+ */
+private val textCache = LruCache<TextKey, RedditText>(600)
+
+/**
+ * [rememberRedditText]'s result outside composition, safe on any thread. Links carry no listener of their own,
+ * so a tap goes to the LocalUriHandler (the Navigator) as before. Not for HTML with spoilers.
+ */
+fun redditText(html: String, linkColor: Color, footnotes: Boolean): RedditText {
+    val key = TextKey(html, linkColor, footnotes)
+    textCache[key]?.let { return it }
+    val text = redditHtml(html, linkColor)
+    val built = if (footnotes) footnoteLinks(text) else RedditText(text, emptyList())
+    textCache.put(key, built)
+    return built
+}
+
+/** Builds [html]'s body into the cache ahead of time, unless [rememberRedditText] would build it per row anyway. */
+fun prepareRedditText(html: String, linkColor: Color, footnotes: Boolean) {
+    if (html.isNotBlank() && SPOILER_CLASS !in html) redditText(html, linkColor, footnotes)
 }
 
 /** Numbers the off-Reddit links in [text]; repeats of a URL reuse its number. */

@@ -10,12 +10,21 @@ import io.github.radixtrator.resync.data.CommentSort
 import io.github.radixtrator.resync.data.CommentTree
 import io.github.radixtrator.resync.data.MoreComments
 import io.github.radixtrator.resync.data.Post
+import io.github.radixtrator.resync.data.PostCache
 import io.github.radixtrator.resync.ui.common.ScrollMemory
 import io.github.radixtrator.resync.data.PostMemory
 import io.github.radixtrator.resync.data.PostMemoryStore
 import io.github.radixtrator.resync.ui.common.likesFor
 import io.github.radixtrator.resync.ui.common.voteValue
+import androidx.compose.ui.graphics.Color
+import io.github.radixtrator.resync.ui.common.cachedGifBody
+import io.github.radixtrator.resync.ui.common.prepareRedditText
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,9 +65,13 @@ class PostViewModel(
 
     companion object {
         private const val AUTOMOD = "AutoModerator"
+
+        /** Comments built before the page shows them: more than fit on a tall screen. */
+        private const val FIRST_SCREEN = 30
     }
 
-    private val _state = MutableStateFlow(State(sort = container.settings.settings.value.commentSort))
+    // A post already seen in a listing draws at once; the comments load under it.
+    private val _state = MutableStateFlow(State(post = PostCache[postId], sort = container.settings.settings.value.commentSort))
     val state = _state.asStateFlow()
 
     private val memoryKey = PostMemoryStore.key(postId, focusCommentId)
@@ -73,8 +86,25 @@ class PostViewModel(
     val subredditIcon = _subredditIcon.asStateFlow()
     private var loadJob: Job? = null
 
+    /** Whether the comments have come in once; until then there's no position or folds worth saving. */
+    private var loadedOnce = false
+    private var iconRequested = false
+    /** Counts the user's votes and saves on the post, so a load that was already underway doesn't undo them. */
+    private var postEdits = 0
+    /** Building the bodies below the first screen; replaced by each reload (sports mode reloads often). */
+    private var prepareJob: Job? = null
+
+    /** The theme's link color, set by the screen, so comment bodies can be built before they're shown. */
+    private val linkColor = MutableStateFlow<Color?>(null)
+
+    fun setLinkColor(color: Color) {
+        linkColor.value = color
+    }
+
     init {
         load(refresh = false)
+        // Fetched alongside the comments when the post is already known, rather than after them.
+        _state.value.post?.let { loadSubredditIcon(it.subreddit) }
         viewModelScope.launch { container.events.collect(::onEvent) }
     }
 
@@ -83,28 +113,38 @@ class PostViewModel(
         loadJob?.cancel()
         _state.update { it.copy(loading = !refresh, refreshing = refresh && !quiet, error = if (quiet) it.error else null) }
         loadJob = viewModelScope.launch {
+            val editsBefore = postEdits
             try {
                 val result = container.api.comments(postId, _state.value.sort, focusCommentId, context, settings.commentCount.limit)
-                val comments = withContext(Dispatchers.Default) { shown(result.comments) }
-                _state.update {
-                    // Keep folds across refreshes, and restore last visit's on first load. With no last visit,
-                    // "Collapse all threads by default" folds every top-level thread (not on single-thread pages).
-                    val folded = when {
-                        it.post != null -> it.collapsed
-                        savedPosition != null -> savedPosition.collapsed
-                        settings.collapseAllByDefault && focusCommentId == null -> topLevelIds(comments)
-                        else -> emptySet()
+                val color = withTimeoutOrNull(1_000) { linkColor.filterNotNull().first() }
+                val comments = withContext(Dispatchers.Default) {
+                    shown(result.comments).also { all ->
+                        // The rows the page opens on, built here so the first frame doesn't build them all at once.
+                        if (color != null) {
+                            result.post.selfTextHtml?.let { prepareRedditText(it, color, settings.linkCards) }
+                            prepareBodies(CommentTree.visible(all, folds(all, _state.value)).asSequence().map { it.node }.take(FIRST_SCREEN), color)
+                        }
                     }
+                }
+                _state.update {
+                    val folded = folds(comments, it)
                     val ids = comments.mapTo(HashSet()) { node -> node.id }
+                    // A vote or save made on the post while this loaded is newer than what Reddit sent.
+                    val shownPost = it.post?.takeIf { postEdits != editsBefore }
                     it.copy(
-                        post = result.post,
+                        post = shownPost?.let { p -> result.post.copy(likes = p.likes, score = p.score, saved = p.saved) } ?: result.post,
                         comments = comments,
                         collapsed = folded.filterTo(HashSet()) { id -> id in ids },
                         loading = false,
                         refreshing = false,
                     )
                 }
-                if (_subredditIcon.value == null) loadSubredditIcon(result.post.subreddit)
+                loadedOnce = true
+                _state.value.post?.let(PostCache::put)
+                // The rest, ahead of the scroll.
+                prepareJob?.cancel()
+                if (color != null) prepareJob = viewModelScope.launch(Dispatchers.Default) { prepareBodies(comments.asSequence(), color) }
+                if (!iconRequested) loadSubredditIcon(result.post.subreddit)
                 loadAvatars(comments)
                 container.recentPosts.record(result.post)
             } catch (e: CancellationException) {
@@ -116,6 +156,28 @@ class PostViewModel(
                     _state.update { it.copy(loading = false, refreshing = false, error = e.message ?: "Something went wrong") }
                 }
             }
+        }
+    }
+
+    /**
+     * Keep folds across refreshes, and restore last visit's on first load. With no last visit,
+     * "Collapse all threads by default" folds every top-level thread (not on single-thread pages).
+     */
+    private fun folds(comments: List<CommentNode>, current: State): Set<String> = when {
+        loadedOnce -> current.collapsed
+        savedPosition != null -> savedPosition.collapsed
+        settings.collapseAllByDefault && focusCommentId == null -> topLevelIds(comments)
+        else -> emptySet()
+    }
+
+    /** Builds [nodes]' bodies into the shared caches the comment rows read, as [CommentRow] would build them. */
+    private suspend fun prepareBodies(nodes: Sequence<CommentNode>, color: Color) {
+        val s = settings
+        for (node in nodes) {
+            if (node !is Comment) continue
+            currentCoroutineContext().ensureActive()
+            val html = if (s.commentGifs) cachedGifBody(node.bodyHtml, node.gifs).html else node.bodyHtml
+            prepareRedditText(html, color, s.linkCards)
         }
     }
 
@@ -220,11 +282,11 @@ class PostViewModel(
     }
 
     private fun rememberFolds() {
-        if (remembering) container.postMemory.saveCollapsed(memoryKey, _state.value.collapsed)
+        if (remembering && loadedOnce) container.postMemory.saveCollapsed(memoryKey, _state.value.collapsed)
     }
 
     fun saveScroll(index: Int, offset: Int) {
-        if (remembering && _state.value.post != null) container.postMemory.saveScroll(memoryKey, index, offset)
+        if (remembering && loadedOnce) container.postMemory.saveScroll(memoryKey, index, offset)
     }
 
     private fun loadAvatars(nodes: List<CommentNode>) {
@@ -233,6 +295,7 @@ class PostViewModel(
     }
 
     private fun loadSubredditIcon(subreddit: String) {
+        iconRequested = true
         viewModelScope.launch {
             runCatching { container.api.subredditAbout(subreddit) }.onSuccess { _subredditIcon.value = it.iconUrl }
         }
@@ -246,6 +309,7 @@ class PostViewModel(
             try {
                 val loaded = container.api.moreChildren(post.fullname, more.children, _state.value.sort)
                 loadAvatars(loaded)
+                linkColor.value?.let { color -> withContext(Dispatchers.Default) { prepareBodies(loaded.asSequence(), color) } }
                 _state.update {
                     it.copy(
                         comments = shown(CommentTree.splice(it.comments, more, loaded, remaining = more.children.drop(100))),
@@ -263,9 +327,11 @@ class PostViewModel(
     fun votePost(direction: Int) {
         val post = _state.value.post ?: return
         if (!requireLogin()) return
+        postEdits++
         _state.update { it.copy(post = post.copy(likes = likesFor(direction), score = post.score - voteValue(post.likes) + direction)) }
         viewModelScope.launch {
             runCatching { container.api.vote(post.fullname, direction) }.onFailure { e ->
+                postEdits++
                 _state.update { it.copy(post = post, message = "Vote failed: ${e.message}") }
             }
         }
@@ -274,9 +340,11 @@ class PostViewModel(
     fun toggleSavePost() {
         val post = _state.value.post ?: return
         if (!requireLogin()) return
+        postEdits++
         _state.update { it.copy(post = post.copy(saved = !post.saved)) }
         viewModelScope.launch {
             runCatching { container.api.setSaved(post.fullname, !post.saved) }.onFailure { e ->
+                postEdits++
                 _state.update { it.copy(post = post, message = "Save failed: ${e.message}") }
             }
         }

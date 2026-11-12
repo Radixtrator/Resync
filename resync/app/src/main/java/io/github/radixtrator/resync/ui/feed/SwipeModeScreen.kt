@@ -58,7 +58,6 @@ import io.github.radixtrator.resync.ui.navigation.LocalNavigator
 import io.github.radixtrator.resync.ui.navigation.LocalFrontpageOrAllFeed
 import io.github.radixtrator.resync.ui.navigation.LocalSettings
 import io.github.radixtrator.resync.ui.navigation.isFrontpageOrAll
-import io.github.radixtrator.resync.ui.navigation.PostRoute
 import io.github.radixtrator.resync.ui.navigation.SearchRoute
 import io.github.radixtrator.resync.ui.navigation.SwipeModeRoute
 
@@ -144,7 +143,7 @@ private fun SwipeModeScreenContent(subreddit: String?, container: AppContainer) 
                         canDownload = urls.isNotEmpty(),
                         onVote = { callbacks.onVote(post, it) },
                         onToggleSave = { callbacks.onToggleSave(post) },
-                        onComments = { nav.push(PostRoute(post.id)) },
+                        onComments = { nav.openPost(post) },
                         onDownload = { urls.forEach(download) },
                         onMore = { sheetFor = post.fullname },
                     )
@@ -165,7 +164,7 @@ private fun SwipeModeScreenContent(subreddit: String?, container: AppContainer) 
                         SwipePage(
                             post = post,
                             iconUrl = icons[post.subreddit.lowercase()],
-                            onOpen = { nav.push(PostRoute(post.id)) },
+                            onOpen = { nav.openPost(post) },
                             onMedia = { nav.openMedia(post) },
                             onMore = { sheetFor = post.fullname },
                         )
