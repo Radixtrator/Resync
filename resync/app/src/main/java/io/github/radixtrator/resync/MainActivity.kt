@@ -24,7 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.IntOffset
-import io.github.radixtrator.resync.ui.common.PARALLAX
 import io.github.radixtrator.resync.ui.common.SwipeBackState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -257,15 +256,16 @@ private val MediaFade = NavDisplay.transitionSpec { ContentTransform(fadeIn(Moti
 private val CardSpec = Motion.page<IntOffset>()
 private val GestureSpec = tween<IntOffset>(Motion.PAGE, easing = LinearEasing)
 
-/** Sync's card push: the new screen slides over the old one, which drifts left and dims. */
+/** Sync's card push: the new screen slides in over the old one, which stays where it is underneath. */
 private fun cardPush() = ContentTransform(
     targetContentEnter = slideInHorizontally(CardSpec) { it },
-    initialContentExit = slideOutHorizontally(CardSpec) { (-it * PARALLAX).toInt() },
+    // A zero-length slide, timed like the push, keeps the old screen drawn until the new one has covered it.
+    initialContentExit = slideOutHorizontally(CardSpec) { 0 },
 )
 
-/** The reverse: the top card slides off to the right and the screen under it drifts back into place. */
+/** The reverse: the top card slides off to the right, over the screen under it, which doesn't move. */
 private fun cardPop(spec: FiniteAnimationSpec<IntOffset> = CardSpec) = ContentTransform(
-    targetContentEnter = slideInHorizontally(spec) { (-it * PARALLAX).toInt() },
+    targetContentEnter = EnterTransition.None,
     initialContentExit = slideOutHorizontally(spec) { it },
     targetContentZIndex = -1f,
 )

@@ -264,10 +264,8 @@ private fun PaneSwipeBack(previous: (@Composable () -> Unit)?, onBack: () -> Uni
             },
     ) {
         if (previous != null && dragging) {
-            Box(Modifier.fillMaxSize().graphicsLayer { translationX = -width * PARALLAX * (1f - progress()) }) {
-                CompositionLocalProvider(LocalPreviousScreen provides PaneBelow(null)) { previous() }
-            }
-            // A sibling of the layer above, so dimming redraws one rectangle rather than the screen under it.
+            CompositionLocalProvider(LocalPreviousScreen provides PaneBelow(null)) { previous() }
+            // A sibling of the screen above, so dimming redraws one rectangle rather than the screen under it.
             Box(Modifier.fillMaxSize().drawBehind { drawRect(Color.Black.copy(alpha = 0.3f * (1f - progress()))) })
         }
         Box(
@@ -284,6 +282,3 @@ private fun PaneSwipeBack(previous: (@Composable () -> Unit)?, onBack: () -> Uni
 
 /** Springing back after a drag that didn't go far enough: no bounce, quick, and it keeps the fling's momentum. */
 private val SettleSpec = spring<Float>(stiffness = Spring.StiffnessMedium)
-
-/** How far the screen under a card shifts left, as a fraction of the width. */
-const val PARALLAX = 0.3f
