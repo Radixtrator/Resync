@@ -341,6 +341,8 @@ data class Settings(
     val swipeToClose: Boolean = true,
     /** Media › "Hold to preview": holding a post's picture in a feed shows it full screen until the finger lifts. */
     val holdToPreview: Boolean = true,
+    /** Media › "Unblur NSFW previews": with [holdToPreview], holding a blurred NSFW picture shows it unblurred. */
+    val peekUnblursNsfw: Boolean = false,
     /** Media › Video / GIF playback: "Display seek bar". */
     val videoSeekBar: Boolean = true,
     /** Media › Video / GIF playback: "Display speed controls" (in the player's ⋮ panel). */

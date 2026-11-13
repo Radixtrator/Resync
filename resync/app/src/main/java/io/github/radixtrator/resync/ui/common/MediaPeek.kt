@@ -63,11 +63,14 @@ val LocalMediaPeek = staticCompositionLocalOf<MediaPeek?> { null }
 
 /**
  * The picture a hold on this post's preview peeks at: an image, or a gallery's first. Not videos or links, and not
- * while the preview is blurred (NSFW or spoiler), where a stray hold would reveal it.
+ * while the preview is blurred, where a stray hold would reveal it: unless it's blurred only for being NSFW and
+ * Media › "Unblur NSFW previews" is on, which shows it unblurred. Spoilers stay hidden either way.
  */
 @Composable
 fun Post.peekUrl(): String? {
-    if (!LocalSettings.current.holdToPreview || shouldBlur()) return null
+    val settings = LocalSettings.current
+    if (!settings.holdToPreview) return null
+    if (shouldBlur() && (!settings.peekUnblursNsfw || (spoiler && settings.blurSpoilers))) return null
     return when (val m = media) {
         is PostMedia.Image -> m.url
         is PostMedia.Gallery -> m.images.firstOrNull()?.url ?: m.preview?.url

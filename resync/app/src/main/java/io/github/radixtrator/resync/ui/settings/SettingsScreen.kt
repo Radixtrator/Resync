@@ -297,6 +297,9 @@ private fun CategoryRows(container: AppContainer, category: SettingsCategory, se
                 settings.swipeToClose,
             ) { v -> update { it.copy(swipeToClose = v) } }
             Toggle("Hold to preview", "Hold a picture in a feed to see it full screen until you let go", settings.holdToPreview) { v -> update { it.copy(holdToPreview = v) } }
+            if (settings.holdToPreview) {
+                Toggle("Unblur NSFW previews", "Holding a blurred NSFW picture shows it unblurred", settings.peekUnblursNsfw) { v -> update { it.copy(peekUnblursNsfw = v) } }
+            }
             Toggle("Start videos muted", null, settings.muteVideos) { v -> update { it.copy(muteVideos = v) } }
             Toggle("Display seek bar", null, settings.videoSeekBar) { v -> update { it.copy(videoSeekBar = v) } }
             Toggle("Display speed controls", null, settings.videoSpeedControls) { v -> update { it.copy(videoSpeedControls = v) } }
