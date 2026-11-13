@@ -200,7 +200,11 @@ private fun FeedScreenContent(route: FeedRoute, container: AppContainer) {
                 onChangeView = { viewOpen = true },
                 onScrollToTop = { scope.launch { gridState.scrollToItem(0) } },
             ),
-            onReselectTab = { scope.launch { gridState.animateScrollToItem(0) } },
+            // Tapping Posts while on it: back to the top and a fresh load, as pull-to-refresh does.
+            onReselectTab = {
+                scope.launch { gridState.animateScrollToItem(0) }
+                vm.refresh()
+            },
             actions = { IconButton(onClick = { sortOpen = true }) { Icon(AppIcons.Sort, "Sort") } },
             showSearch = true,
             searchSubreddit = subreddit.takeIf { vm.isCommunity },

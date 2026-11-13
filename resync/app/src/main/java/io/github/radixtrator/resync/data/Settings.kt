@@ -276,10 +276,10 @@ data class Settings(
      */
     val tabbedComments: Boolean = false,
     /**
-     * General › "Confirm exit" (`exit_preference`): back on the last page asks before closing the app. Sync's default
-     * is on; off keeps Resync's old behavior.
+     * General › "Confirm exit" (`exit_preference`): back on the last page asks before closing the app, as Sync does by
+     * default. The dialog's "Don't ask again" turns it off.
      */
-    val confirmExit: Boolean = false,
+    val confirmExit: Boolean = true,
     /** Theme management's saved themes, in the order they were saved. */
     val savedThemes: List<SavedTheme> = emptyList(),
     /**
