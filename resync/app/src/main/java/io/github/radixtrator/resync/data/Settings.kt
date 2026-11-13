@@ -261,6 +261,11 @@ data class Settings(
     val swipeBack: Boolean = true,
     /** Sync's Tablet mode: on wide screens, a navigation rail replaces the bottom bar. */
     val tabletMode: Boolean = false,
+    /**
+     * Tablet › "Navigation on the right": on wide screens (a foldable's inner screen, a tablet) the Posts / Explore /
+     * Inbox bar becomes a rail down the right edge, within reach of the thumb. Works with or without Tablet mode.
+     */
+    val navRailRight: Boolean = false,
     /** Tablet › "Dual pane (landscape)" (`tablet_dual_pane_landscape`): a post opens beside its feed in landscape. */
     val dualPaneLandscape: Boolean = true,
     /** Tablet › "Dual pane (portrait)" (`tablet_dual_pane_portrait`): the same in portrait, on wide enough windows. */

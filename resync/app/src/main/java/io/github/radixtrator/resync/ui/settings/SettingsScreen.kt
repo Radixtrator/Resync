@@ -199,6 +199,11 @@ private fun CategoryRows(container: AppContainer, category: SettingsCategory, se
         }
         SettingsCategory.TABLET -> {
             Toggle("Tablet mode", "On wide screens, a navigation rail replaces the bottom bar", settings.tabletMode) { v -> update { it.copy(tabletMode = v) } }
+            Toggle(
+                "Navigation on the right",
+                "On wide screens, like a foldable's inner screen, move the bottom bar to a rail on the right edge for one-handed use",
+                settings.navRailRight,
+            ) { v -> update { it.copy(navRailRight = v) } }
             // Sync's Tablet › Options: the dual pane per orientation, on windows wide enough for two panes.
             if (settings.tabletMode) {
                 Toggle("Dual pane (landscape)", "Show comments next to posts in landscape", settings.dualPaneLandscape) { v -> update { it.copy(dualPaneLandscape = v) } }
