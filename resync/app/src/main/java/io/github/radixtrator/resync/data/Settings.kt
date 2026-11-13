@@ -339,6 +339,8 @@ data class Settings(
     val tapToClose: Boolean = true,
     /** Media › "Swipe to close": videos with a fling up or down, and images that close by a tap with a downward one. */
     val swipeToClose: Boolean = true,
+    /** Media › "Hold to preview": holding a post's picture in a feed shows it full screen until the finger lifts. */
+    val holdToPreview: Boolean = true,
     /** Media › Video / GIF playback: "Display seek bar". */
     val videoSeekBar: Boolean = true,
     /** Media › Video / GIF playback: "Display speed controls" (in the player's ⋮ panel). */

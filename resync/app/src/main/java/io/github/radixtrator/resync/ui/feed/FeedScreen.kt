@@ -105,6 +105,7 @@ import io.github.radixtrator.resync.ui.navigation.CustomizeViewRoute
 import io.github.radixtrator.resync.ui.navigation.FeedRoute
 import io.github.radixtrator.resync.ui.navigation.LocalNavigator
 import io.github.radixtrator.resync.ui.navigation.LocalFrontpageOrAllFeed
+import io.github.radixtrator.resync.ui.common.MediaPeekHost
 import io.github.radixtrator.resync.ui.navigation.LocalSettings
 import io.github.radixtrator.resync.ui.navigation.isFrontpageOrAll
 import io.github.radixtrator.resync.ui.navigation.PostRoute
@@ -114,7 +115,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun FeedScreen(route: FeedRoute, container: AppContainer) {
     CompositionLocalProvider(LocalFrontpageOrAllFeed provides isFrontpageOrAll(route.subreddit, route.domain)) {
-        FeedScreenContent(route, container)
+        // Holding a post's picture previews it until the finger lifts.
+        MediaPeekHost { FeedScreenContent(route, container) }
     }
 }
 

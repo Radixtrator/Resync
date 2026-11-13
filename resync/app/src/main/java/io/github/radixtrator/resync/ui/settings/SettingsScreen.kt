@@ -296,6 +296,7 @@ private fun CategoryRows(container: AppContainer, category: SettingsCategory, se
                 if (settings.tapToClose) "Fling videos up or down, and images down, to close them" else "Fling videos up or down to close them",
                 settings.swipeToClose,
             ) { v -> update { it.copy(swipeToClose = v) } }
+            Toggle("Hold to preview", "Hold a picture in a feed to see it full screen until you let go", settings.holdToPreview) { v -> update { it.copy(holdToPreview = v) } }
             Toggle("Start videos muted", null, settings.muteVideos) { v -> update { it.copy(muteVideos = v) } }
             Toggle("Display seek bar", null, settings.videoSeekBar) { v -> update { it.copy(videoSeekBar = v) } }
             Toggle("Display speed controls", null, settings.videoSpeedControls) { v -> update { it.copy(videoSpeedControls = v) } }
