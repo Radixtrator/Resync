@@ -124,7 +124,7 @@ fun VideoPlayerScreen(url: String, loop: Boolean, postId: String?, downloads: Me
         )
         failure != null && fallback != null ->
             VideoPlayer(url, stream = fallback, hdStream = null, loop = true, repeat = true, postId = postId, downloads = downloads, onClose = onClose)
-        else -> DismissibleMedia(onDismiss = onClose, dismissOnDrag = LocalSettings.current.let { !it.tapToClose || it.swipeToClose }) {
+        else -> DismissibleMedia(onDismiss = onClose, dismissOnDrag = LocalSettings.current.swipeToClose) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 val message = failure
                 if (message == null) {
@@ -266,20 +266,14 @@ private fun VideoPlayer(
     }
     BackHandler(enabled = panelOpen) { panelOpen = false }
 
-    // Closes like the image viewer, per Media › "Close images and videos by": a tap closes it and a swipe up opens the panel
-    // (a downward fling closes it too, with "Swipe to close"); or a swipe up or down closes it and a tap shows and
-    // hides the controls.
-    val tapCloses = settings.tapToClose
     DismissibleMedia(
         onDismiss = onClose,
-        // Closing by tap, the open panel takes vertical drags; closing by swipe, a swipe still closes with it showing.
-        enabled = !zoomed && (!tapCloses || !panelOpen),
-        dismissOnDrag = !tapCloses || settings.swipeToClose,
-        // Without onSwipeUp, a fling either way closes.
-        onSwipeUp = if (tapCloses) ({
+        enabled = !panelOpen && !zoomed,
+        dismissOnDrag = settings.swipeToClose,
+        onSwipeUp = {
             controls = true
             panelOpen = true
-        }) else null,
+        },
     ) {
         Box(Modifier.fillMaxSize()) {
             // A TextureView rather than PlayerView's default SurfaceView: a SurfaceView ignores Compose's
@@ -304,13 +298,7 @@ private fun VideoPlayer(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .zoomGestures(zoom, onTap = {
-                        when {
-                            panelOpen -> panelOpen = false
-                            tapCloses -> onClose()
-                            else -> controls = !controls
-                        }
-                    }),
+                    .zoomGestures(zoom, onTap = { if (panelOpen) panelOpen = false else controls = !controls }),
             )
             error?.let { message ->
                 Column(
