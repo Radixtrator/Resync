@@ -285,12 +285,11 @@ private fun CategoryRows(container: AppContainer, category: SettingsCategory, se
         }
         SettingsCategory.MESSAGING -> MessagingRows(container, settings)
         SettingsCategory.MEDIA -> {
-            Choice("Close images by", listOf(true, false), settings.tapToClose, { if (it) "Single tap" else "Swiping up or down" }) { v -> update { it.copy(tapToClose = v) } }
-            Toggle(
-                "Swipe to close",
-                if (settings.tapToClose) "Fling videos and images down to close them" else "Fling videos down to close them",
-                settings.swipeToClose,
-            ) { v -> update { it.copy(swipeToClose = v) } }
+            Choice("Close images and videos by", listOf(true, false), settings.tapToClose, { if (it) "Single tap" else "Swiping up or down" }) { v -> update { it.copy(tapToClose = v) } }
+            // Swiping up or down always closes; the toggle only matters alongside a tap.
+            if (settings.tapToClose) {
+                Toggle("Swipe to close", "Fling images and videos down to close them", settings.swipeToClose) { v -> update { it.copy(swipeToClose = v) } }
+            }
             Toggle("Start videos muted", null, settings.muteVideos) { v -> update { it.copy(muteVideos = v) } }
             Toggle("Display seek bar", null, settings.videoSeekBar) { v -> update { it.copy(videoSeekBar = v) } }
             Toggle("Display speed controls", null, settings.videoSpeedControls) { v -> update { it.copy(videoSpeedControls = v) } }

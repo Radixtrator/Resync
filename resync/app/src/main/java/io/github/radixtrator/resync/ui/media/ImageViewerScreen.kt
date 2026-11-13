@@ -56,7 +56,7 @@ import java.util.Locale
 
 /**
  * Sync's image viewer, with its control bar (download, host and URL, resolution, file size, then Comments / Open in
- * browser / Copy / Share). Media › "Close images by": a single tap closes it and swiping up slides the bar in from
+ * browser / Copy / Share). Media › "Close images and videos by": a single tap closes it and swiping up slides the bar in from
  * the bottom (a downward fling closes it too, with "Swipe to close"); or swiping up or down closes it and a tap shows
  * and hides the bar.
  */
