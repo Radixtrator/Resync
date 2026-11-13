@@ -332,7 +332,7 @@ data class Settings(
      * down (false; a tap then shows and hides the bar).
      */
     val tapToClose: Boolean = true,
-    /** Media › "Swipe to close" videos, and images that close by a tap, with a downward fling. */
+    /** Media › "Swipe to close": videos with a fling up or down, and images that close by a tap with a downward one. */
     val swipeToClose: Boolean = true,
     /** Media › Video / GIF playback: "Display seek bar". */
     val videoSeekBar: Boolean = true,

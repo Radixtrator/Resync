@@ -94,7 +94,7 @@ private val SPEEDS = listOf(0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f)
 
 /**
  * Full-screen Media3 player for v.redd.it (HLS), mp4 clips and RedGifs pages, with Sync's controls: seek bar,
- * then HD, restart, play/pause, mute, time, download and ⋮. The ⋮ (or a swipe up) adds playback speed, link info
+ * then HD, restart, play/pause, mute, time, download and ⋮. The ⋮ adds playback speed, link info
  * and the Comments / Open in browser / Copy / Share bar. [loop] is for GIF-style clips: they repeat
  * silently and hide the controls until tapped. A RedGifs [url] is first looked up for its mp4s ([Redgifs]);
  * if RedGifs can't be reached, [fallback] (Reddit's own copy) plays instead, when there is one.
@@ -269,11 +269,8 @@ private fun VideoPlayer(
     DismissibleMedia(
         onDismiss = onClose,
         enabled = !panelOpen && !zoomed,
+        // No swipe-up panel (that's the image viewer's info bar): a fling up or down closes, and ⋮ opens the panel.
         dismissOnDrag = settings.swipeToClose,
-        onSwipeUp = {
-            controls = true
-            panelOpen = true
-        },
     ) {
         Box(Modifier.fillMaxSize()) {
             // A TextureView rather than PlayerView's default SurfaceView: a SurfaceView ignores Compose's

@@ -288,7 +288,7 @@ private fun CategoryRows(container: AppContainer, category: SettingsCategory, se
             Choice("Close images by", listOf(true, false), settings.tapToClose, { if (it) "Single tap" else "Swiping up or down" }) { v -> update { it.copy(tapToClose = v) } }
             Toggle(
                 "Swipe to close",
-                if (settings.tapToClose) "Fling videos and images down to close them" else "Fling videos down to close them",
+                if (settings.tapToClose) "Fling videos up or down, and images down, to close them" else "Fling videos up or down to close them",
                 settings.swipeToClose,
             ) { v -> update { it.copy(swipeToClose = v) } }
             Toggle("Start videos muted", null, settings.muteVideos) { v -> update { it.copy(muteVideos = v) } }
