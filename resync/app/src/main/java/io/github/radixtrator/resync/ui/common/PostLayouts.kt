@@ -896,7 +896,8 @@ fun CardPreview(post: Post, onClick: () -> Unit, modifier: Modifier = Modifier, 
                 },
             )
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable(onClick = onClick),
+            // Holding it peeks at the picture, in feeds.
+            .peekableClick(post, onClick),
     ) {
         // Data saving leaves the preview unloaded: the empty frame keeps its size, with the post's type in it.
         if (!saving) {
@@ -979,7 +980,8 @@ private fun Thumbnail(post: Post, size: Dp, shape: Shape, onClick: () -> Unit, m
             .size(size)
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable(onClick = onClick),
+            // Holding it peeks at the picture, in feeds.
+            .peekableClick(post, onClick),
         contentAlignment = Alignment.Center,
     ) {
         if (thumb != null) {

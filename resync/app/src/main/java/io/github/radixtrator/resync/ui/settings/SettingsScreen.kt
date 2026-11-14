@@ -199,6 +199,11 @@ private fun CategoryRows(container: AppContainer, category: SettingsCategory, se
         }
         SettingsCategory.TABLET -> {
             Toggle("Tablet mode", "On wide screens, a navigation rail replaces the bottom bar", settings.tabletMode) { v -> update { it.copy(tabletMode = v) } }
+            Toggle(
+                "Navigation on the right",
+                "On wide screens, like a foldable's inner screen, move the bottom bar to a rail on the right edge for one-handed use",
+                settings.navRailRight,
+            ) { v -> update { it.copy(navRailRight = v) } }
             // Sync's Tablet › Options: the dual pane per orientation, on windows wide enough for two panes.
             if (settings.tabletMode) {
                 Toggle("Dual pane (landscape)", "Show comments next to posts in landscape", settings.dualPaneLandscape) { v -> update { it.copy(dualPaneLandscape = v) } }
@@ -288,9 +293,13 @@ private fun CategoryRows(container: AppContainer, category: SettingsCategory, se
             Choice("Close images by", listOf(true, false), settings.tapToClose, { if (it) "Single tap" else "Swiping up or down" }) { v -> update { it.copy(tapToClose = v) } }
             Toggle(
                 "Swipe to close",
-                if (settings.tapToClose) "Fling videos and images down to close them" else "Fling videos down to close them",
+                if (settings.tapToClose) "Fling videos up or down, and images down, to close them" else "Fling videos up or down to close them",
                 settings.swipeToClose,
             ) { v -> update { it.copy(swipeToClose = v) } }
+            Toggle("Hold to preview", "Hold a picture in a feed to see it full screen until you let go", settings.holdToPreview) { v -> update { it.copy(holdToPreview = v) } }
+            if (settings.holdToPreview) {
+                Toggle("Unblur NSFW previews", "Holding a blurred NSFW picture shows it unblurred", settings.peekUnblursNsfw) { v -> update { it.copy(peekUnblursNsfw = v) } }
+            }
             Toggle("Start videos muted", null, settings.muteVideos) { v -> update { it.copy(muteVideos = v) } }
             Toggle("Display seek bar", null, settings.videoSeekBar) { v -> update { it.copy(videoSeekBar = v) } }
             Toggle("Display speed controls", null, settings.videoSpeedControls) { v -> update { it.copy(videoSpeedControls = v) } }

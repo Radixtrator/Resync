@@ -141,6 +141,10 @@ import io.github.radixtrator.resync.ui.theme.LocalDarkTheme
 enum class HomeTab { POSTS, INBOX }
 
 private val NavBarHeight = 80.dp
+
+/** Material's navigation rail width; the page and the FAB keep clear of it. */
+private val RailWidth = 80.dp
+
 private val FabSize = 56.dp
 
 // Sync's nav labels are larger than M3's 12sp.
@@ -187,9 +191,11 @@ fun ShellScaffold(
     // The nav bar and FAB slide away with the toolbar, as Sync's autohide does. Its collapsedFraction is read only
     // inside graphicsLayer, so scrolling redraws them without recomposing the page.
     val toolbar = scrollBehavior.state
-    // Tablet mode: on a wide screen the Posts / Explore / Inbox bar becomes a rail down the left edge.
+    // Tablet mode: on a wide screen the Posts / Explore / Inbox bar becomes a rail down the left edge, or the right
+    // one with "Navigation on the right" (which brings the rail on its own, Tablet mode or not).
     val settings = LocalSettings.current
-    val rail = home && settings.tabletMode && LocalConfiguration.current.screenWidthDp >= 600
+    val rail = home && (settings.tabletMode || settings.navRailRight) && LocalConfiguration.current.screenWidthDp >= 600
+    val railRight = rail && settings.navRailRight
     // Drawer navigation: no bottom bar; the avatar opens a side drawer. The rail wins on wide screens.
     val drawer = home && !rail && settings.drawerNavigation
     val bar = home && !rail && !drawer
@@ -249,7 +255,7 @@ fun ShellScaffold(
         },
     ) { padding ->
         Box(Modifier.fillMaxSize()) {
-            Box(Modifier.fillMaxSize().padding(start = if (rail) 80.dp else 0.dp)) {
+            Box(Modifier.fillMaxSize().padding(start = if (rail && !railRight) RailWidth else 0.dp, end = if (railRight) RailWidth else 0.dp)) {
             content(
                 PaddingValues(
                     top = padding.calculateTopPadding(),
@@ -263,7 +269,8 @@ fun ShellScaffold(
                 onLongClick = { explore = ExploreMode.SEARCH },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 24.dp, bottom = 16.dp + navInset + if (bar) NavBarHeight else 0.dp)
+                    // Clear of a right-hand rail.
+                    .padding(end = 24.dp + if (railRight) RailWidth else 0.dp, bottom = 16.dp + navInset + if (bar) NavBarHeight else 0.dp)
                     .graphicsLayer {
                         val travel = 16.dp.toPx() + FabSize.toPx() + if (bar) NavBarHeight.toPx() + navInset.toPx() else navInset.toPx()
                         translationY = toolbar.collapsedFraction * travel
@@ -271,7 +278,7 @@ fun ShellScaffold(
             )
             if (rail) {
                 androidx.compose.material3.NavigationRail(
-                    modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight(),
+                    modifier = Modifier.align(if (railRight) Alignment.CenterEnd else Alignment.CenterStart).fillMaxHeight(),
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ) {
                     Spacer(Modifier.weight(1f))

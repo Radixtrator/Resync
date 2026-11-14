@@ -261,6 +261,11 @@ data class Settings(
     val swipeBack: Boolean = true,
     /** Sync's Tablet mode: on wide screens, a navigation rail replaces the bottom bar. */
     val tabletMode: Boolean = false,
+    /**
+     * Tablet › "Navigation on the right": on wide screens (a foldable's inner screen, a tablet) the Posts / Explore /
+     * Inbox bar becomes a rail down the right edge, within reach of the thumb. Works with or without Tablet mode.
+     */
+    val navRailRight: Boolean = false,
     /** Tablet › "Dual pane (landscape)" (`tablet_dual_pane_landscape`): a post opens beside its feed in landscape. */
     val dualPaneLandscape: Boolean = true,
     /** Tablet › "Dual pane (portrait)" (`tablet_dual_pane_portrait`): the same in portrait, on wide enough windows. */
@@ -271,10 +276,10 @@ data class Settings(
      */
     val tabbedComments: Boolean = false,
     /**
-     * General › "Confirm exit" (`exit_preference`): back on the last page asks before closing the app. Sync's default
-     * is on; off keeps Resync's old behavior.
+     * General › "Confirm exit" (`exit_preference`): back on the last page asks before closing the app, as Sync does by
+     * default. The dialog's "Don't ask again" turns it off.
      */
-    val confirmExit: Boolean = false,
+    val confirmExit: Boolean = true,
     /** Theme management's saved themes, in the order they were saved. */
     val savedThemes: List<SavedTheme> = emptyList(),
     /**
@@ -332,8 +337,12 @@ data class Settings(
      * down (false; a tap then shows and hides the bar).
      */
     val tapToClose: Boolean = true,
-    /** Media › "Swipe to close" videos, and images that close by a tap, with a downward fling. */
+    /** Media › "Swipe to close": videos with a fling up or down, and images that close by a tap with a downward one. */
     val swipeToClose: Boolean = true,
+    /** Media › "Hold to preview": holding a post's picture in a feed shows it full screen until the finger lifts. */
+    val holdToPreview: Boolean = true,
+    /** Media › "Unblur NSFW previews": with [holdToPreview], holding a blurred NSFW picture shows it unblurred. */
+    val peekUnblursNsfw: Boolean = false,
     /** Media › Video / GIF playback: "Display seek bar". */
     val videoSeekBar: Boolean = true,
     /** Media › Video / GIF playback: "Display speed controls" (in the player's ⋮ panel). */

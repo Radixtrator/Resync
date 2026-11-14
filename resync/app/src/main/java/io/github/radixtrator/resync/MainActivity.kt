@@ -19,7 +19,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -32,6 +35,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -220,12 +225,24 @@ private fun ResyncNavHost(container: AppContainer, openRoute: NavKey?, onRouteOp
         var confirmingExit by remember { mutableStateOf(false) }
         BackHandler(enabled = settings.confirmExit && backStack.size == 1) { confirmingExit = true }
         if (confirmingExit) {
+            // "Don't ask again" turns General › "Confirm exit" off, on exiting.
+            var neverAsk by remember { mutableStateOf(false) }
             AlertDialog(
                 onDismissRequest = { confirmingExit = false },
                 title = { Text("Exit Resync?") },
+                text = {
+                    Row(
+                        Modifier.clickable { neverAsk = !neverAsk },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Checkbox(checked = neverAsk, onCheckedChange = { neverAsk = it })
+                        Text("Don't ask again")
+                    }
+                },
                 confirmButton = {
                     TextButton(onClick = {
                         confirmingExit = false
+                        if (neverAsk) container.settings.update { it.copy(confirmExit = false) }
                         (context as? Activity)?.finish()
                     }) { Text("Exit") }
                 },

@@ -105,6 +105,7 @@ import io.github.radixtrator.resync.ui.navigation.CustomizeViewRoute
 import io.github.radixtrator.resync.ui.navigation.FeedRoute
 import io.github.radixtrator.resync.ui.navigation.LocalNavigator
 import io.github.radixtrator.resync.ui.navigation.LocalFrontpageOrAllFeed
+import io.github.radixtrator.resync.ui.common.MediaPeekHost
 import io.github.radixtrator.resync.ui.navigation.LocalSettings
 import io.github.radixtrator.resync.ui.navigation.isFrontpageOrAll
 import io.github.radixtrator.resync.ui.navigation.PostRoute
@@ -114,7 +115,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun FeedScreen(route: FeedRoute, container: AppContainer) {
     CompositionLocalProvider(LocalFrontpageOrAllFeed provides isFrontpageOrAll(route.subreddit, route.domain)) {
-        FeedScreenContent(route, container)
+        // Holding a post's picture previews it until the finger lifts.
+        MediaPeekHost { FeedScreenContent(route, container) }
     }
 }
 
@@ -198,7 +200,11 @@ private fun FeedScreenContent(route: FeedRoute, container: AppContainer) {
                 onChangeView = { viewOpen = true },
                 onScrollToTop = { scope.launch { gridState.scrollToItem(0) } },
             ),
-            onReselectTab = { scope.launch { gridState.animateScrollToItem(0) } },
+            // Tapping Posts while on it: back to the top and a fresh load, as pull-to-refresh does.
+            onReselectTab = {
+                scope.launch { gridState.animateScrollToItem(0) }
+                vm.refresh()
+            },
             actions = { IconButton(onClick = { sortOpen = true }) { Icon(AppIcons.Sort, "Sort") } },
             showSearch = true,
             searchSubreddit = subreddit.takeIf { vm.isCommunity },
