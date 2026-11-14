@@ -222,7 +222,7 @@ private fun GestureSwipeBack(dispatcher: NavigationEventDispatcher, content: @Co
                     onEnd = { velocity ->
                         if (started) {
                             started = false
-                            if (dragged > width * 0.33f || velocity > 1800f) input.backCompleted() else input.backCancelled()
+                            if (dragged > width * SwipeBackDistance || velocity > SwipeBackVelocity) input.backCompleted() else input.backCancelled()
                         }
                     },
                 )
@@ -249,7 +249,7 @@ private fun PaneSwipeBack(previous: (@Composable () -> Unit)?, onBack: () -> Uni
                     scope,
                     onDelta = { offset.snapTo((offset.value + it).coerceAtLeast(0f)) },
                     onEnd = { velocity ->
-                        if (offset.value > width * 0.33f || velocity > 1800f) {
+                        if (offset.value > width * SwipeBackDistance || velocity > SwipeBackVelocity) {
                             // Carry on at about the finger's speed: a fast fling finishes quickly, a slow drag glides.
                             val remaining = width - offset.value
                             val ms = (remaining / velocity.coerceAtLeast(1200f) * 1600f).toInt().coerceIn(90, 220)
@@ -279,6 +279,12 @@ private fun PaneSwipeBack(previous: (@Composable () -> Unit)?, onBack: () -> Uni
         ) { content() }
     }
 }
+
+/** How far (fraction of the page width) a slide-to-go-back drag must go to go back when let go slowly. */
+private const val SwipeBackDistance = 0.15f
+
+/** A rightward fling at least this fast (px/s) goes back however short the drag was. */
+private const val SwipeBackVelocity = 1000f
 
 /** Springing back after a drag that didn't go far enough: no bounce, quick, and it keeps the fling's momentum. */
 private val SettleSpec = spring<Float>(stiffness = Spring.StiffnessMedium)
