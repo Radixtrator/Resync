@@ -100,7 +100,6 @@ import io.github.radixtrator.resync.ui.settings.ThemeManagementScreen
 import io.github.radixtrator.resync.ui.setup.SetupScreen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import io.github.radixtrator.resync.data.Settings
